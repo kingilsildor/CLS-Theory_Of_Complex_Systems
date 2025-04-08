@@ -2,6 +2,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import expon
 
 from config import *
 
@@ -66,8 +67,65 @@ def calculate_tau0(waiting_time: np.ndarray) -> float:
     return tau0
 
 
+def fit_exponential_distribution(waiting_time: np.ndarray) -> tuple:
+    """
+    Fit an exponential distribution to the waiting time data.
+
+    Params
+    ------
+    - waiting_time (np.ndarray): The waiting time for each neuron.
+
+    Returns
+    -------
+    - tuple: The parameters of the fitted exponential distribution.
+    """
+    params = expon.fit(waiting_time, floc=0)
+    return params
+
+
+def calculate_lambda(waiting_time: np.ndarray) -> float:
+    """
+    Calculate the lambda parameter for the exponential distribution.
+
+    Params
+    ------
+    - waiting_time (np.ndarray): The waiting time for each neuron.
+
+    Returns
+    -------
+    - float: The lambda parameter.
+    """
+    params = fit_exponential_distribution(waiting_time)
+    mean = params[1]
+    lambda_estimate = 1 / mean
+    return lambda_estimate
+
+
+def get_pdf(waiting_time: np.ndarray) -> tuple:
+    """
+    Get the probability density function (PDF) of the fitted exponential distribution.
+
+    Params
+    ------
+    - waiting_time (np.ndarray): The waiting time for each neuron.
+
+    Returns
+    -------
+    - tuple: The x values and the PDF values.
+    """
+    x = np.linspace(0, max(waiting_time), len(waiting_time))
+    params = fit_exponential_distribution(waiting_time)
+    pdf_fitted = expon.pdf(x, *params)
+    return x, pdf_fitted
+
+
 def plot_waiting_time_distribution(
-    waiting_time: np.ndarray, tau0: float, save: bool = False
+    waiting_time: np.ndarray,
+    tau0: float,
+    lambda_estimate: float,
+    pdf_fitted: np.ndarray,
+    x: np.ndarray,
+    save: bool = False,
 ) -> None:
     """
     Plot the waiting time distribution.
@@ -76,13 +134,26 @@ def plot_waiting_time_distribution(
     ------
     - waiting_time (np.ndarray): The waiting time for each neuron.
     - tau0 (float): The minimum waiting time.
+    - lambda_estimate (float): The lambda parameter for the exponential distribution.
+    - pdf_fitted (np.ndarray): The PDF values of the fitted exponential distribution.
+    - x (np.ndarray): The x values for the PDF.
     - save (bool): Whether to save the plot.
     """
     plt.hist(
         waiting_time,
         bins=50,
+        density=True,
     )
     plt.axvline(tau0, color="red", linestyle="--", label=f"$\\tau_0$ = {tau0:.2f} ms")
+
+    plt.plot(
+        x,
+        pdf_fitted,
+        color="red",
+        linestyle=":",
+        label=f"Fitted Exponential Distribution $\\lambda={lambda_estimate:.2f}$",
+    )
+
     plt.xlabel(r"Interspike interval $\tau$ (ms)")
     plt.ylabel(r"P($\tau$)")
     plt.title("Neuronal activity waiting time distribution")
@@ -101,8 +172,13 @@ def main():
     data = load_data("Data_neuron.txt")
     waiting_time = calculate_waiting_time(data)
     waiting_time = np.sort(waiting_time)[::-1]
+
     tau0 = calculate_tau0(waiting_time)
-    plot_waiting_time_distribution(waiting_time, tau0, save=True)
+    lambda_estimate = calculate_lambda(waiting_time)
+    x, pdf = get_pdf(waiting_time)
+    plot_waiting_time_distribution(
+        waiting_time, tau0, lambda_estimate, pdf, x, save=True
+    )
 
 
 if __name__ == "__main__":

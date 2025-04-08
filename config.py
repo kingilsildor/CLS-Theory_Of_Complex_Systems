@@ -1,3 +1,5 @@
 RESULT_DIR = "results"
 DATA_DIR = "data"
 FIG_DPI = 300
+DATA_POINTS = 1000
+DATA_BINS = 50

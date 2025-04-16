@@ -12,7 +12,7 @@ def load_data(file: str, dtype: str = "float") -> np.ndarray:
     Params
     ------
     - file (str): The name of the file to load.
-    - dtype (str): The data type of the file. Can be "float" or "int".
+    - dtype (str): The data type of the file. Can be "float", "int", or "str".
 
     Returns
     -------
@@ -22,12 +22,15 @@ def load_data(file: str, dtype: str = "float") -> np.ndarray:
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File {file_path} does not exist.")
 
-    assert dtype in ["float", "int"], "dtype must be 'float' or 'int'"
+    assert dtype in ["float", "int", "str"], "Unsupported data type"
 
     if dtype == "float":
         data = np.loadtxt(file_path, dtype=float)
     elif dtype == "int":
         data = np.loadtxt(file_path, dtype=int)
+    elif dtype == "str":
+        data = np.loadtxt(file_path, dtype=str)
+        data = np.array([list(map(int, row)) for row in data])
     else:
         raise ValueError("Unsupported data type")
     return data

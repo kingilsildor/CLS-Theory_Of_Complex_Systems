@@ -1,45 +1,41 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Load data
-data = np.loadtxt("data/Data_neuron.txt", dtype=float)
-waiting_time = np.diff(data)
+tau0 = 1.9  # Refractory period (ms)
+lambda_ = 0.08  # Decay rate (ms^-1)
+N = 1000  # Number of spikes to simulate
 
-# Create histogram bins
-num_bins = 50
-hist, bin_edges = np.histogram(waiting_time, bins=num_bins)
-x = (bin_edges[:-1] + bin_edges[1:]) / 2  # Bin centers
-y = hist
+# Generate ISIs from delayed exponential distribution
+u = np.random.rand(N)
+simulated_isis = tau0 - np.log(u) / lambda_
 
-# Remove zero values to avoid log issues
-nonzero_indices = y > 0
-x = x[nonzero_indices]
-y = y[nonzero_indices]
+# Load original spike times and compute ISIs
+original_spikes = np.loadtxt("data/Data_neuron.txt")  # Replace with actual path
+original_isis = np.diff(original_spikes)
+original_isis = np.sort(original_isis)[::-1]
 
-# Transform y to ln(y)
-log_y = np.log(y)
+plt.figure(figsize=(10, 6))
 
-# Fit a first-degree polynomial to (x, ln(y))
-p = np.polyfit(x, log_y, 1)
-
-# Extract coefficients
-a = np.exp(p[1])  # e^(intercept)
-b = p[0]  # slope
-
-# Create fitted curve
-y_fit = a * np.exp(b * x)
-
-# Plot histogram and fitted curve
-plt.bar(
-    x,
-    y,
-    width=(bin_edges[1] - bin_edges[0]),
-    alpha=0.6,
+# Plot original data ISIs
+plt.hist(
+    original_isis,
+    bins=50,
     color="blue",
+    density=True,
+    label="Original Data",
 )
-plt.plot(x, y_fit, label=f"Fit: ${a:.2f} e^{{{b:.2f} x}}$", color="red")
-plt.xlabel("Waiting Time Bins")
-plt.ylabel("Frequency")
+# Plot simulated ISIs
+plt.hist(
+    simulated_isis,
+    bins=50,
+    alpha=0.8,
+    color="red",
+    density=True,
+    label="Simulated Data",
+)
+
+plt.xlabel("Inter-Spike Interval (τ) [ms]")
+plt.ylabel("Probability Density")
+plt.title("Comparison of Original vs. Simulated ISIs")
 plt.legend()
-plt.title("Exponential Fit using numpy.polyfit")
 plt.show()

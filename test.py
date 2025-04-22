@@ -1,41 +1,20 @@
-import matplotlib.pyplot as plt
-import numpy as np
+import math
+from itertools import combinations
 
-tau0 = 1.9  # Refractory period (ms)
-lambda_ = 0.08  # Decay rate (ms^-1)
-N = 1000  # Number of spikes to simulate
 
-# Generate ISIs from delayed exponential distribution
-u = np.random.rand(N)
-simulated_isis = tau0 - np.log(u) / lambda_
+def binomial(n, k):
+    # Calculate the number of combinations
+    numerator = math.factorial(n)
+    denominator = math.factorial(k) * math.factorial(n - k)
+    num_combinations = numerator // denominator
+    print(f"Number of combinations: {num_combinations}")
 
-# Load original spike times and compute ISIs
-original_spikes = np.loadtxt("data/Data_neuron.txt")  # Replace with actual path
-original_isis = np.diff(original_spikes)
-original_isis = np.sort(original_isis)[::-1]
+    # Generate and display all possible combinations
+    elements = list(range(1, n + 1))  # Using numbers 1 to n for demonstration
+    all_combinations = list(combinations(elements, k))
+    print("All possible combinations:")
+    for combo in all_combinations:
+        print(combo)
 
-plt.figure(figsize=(10, 6))
 
-# Plot original data ISIs
-plt.hist(
-    original_isis,
-    bins=50,
-    color="blue",
-    density=True,
-    label="Original Data",
-)
-# Plot simulated ISIs
-plt.hist(
-    simulated_isis,
-    bins=50,
-    alpha=0.8,
-    color="red",
-    density=True,
-    label="Simulated Data",
-)
-
-plt.xlabel("Inter-Spike Interval (τ) [ms]")
-plt.ylabel("Probability Density")
-plt.title("Comparison of Original vs. Simulated ISIs")
-plt.legend()
-plt.show()
+binomial(3, 2)

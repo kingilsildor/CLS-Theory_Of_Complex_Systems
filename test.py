@@ -1,20 +1,26 @@
-import math
-from itertools import combinations
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import binom
 
+from assignments.load_data import load_data
 
-def binomial(n, k):
-    # Calculate the number of combinations
-    numerator = math.factorial(n)
-    denominator = math.factorial(k) * math.factorial(n - k)
-    num_combinations = numerator // denominator
-    print(f"Number of combinations: {num_combinations}")
+data = load_data("US_SupremeCourt_n9_N895.txt", "str")
+data[data == 0] = -1  # Convert 0 (liberal) to -1
 
-    # Generate and display all possible combinations
-    elements = list(range(1, n + 1))  # Using numbers 1 to n for demonstration
-    all_combinations = list(combinations(elements, k))
-    print("All possible combinations:")
-    for combo in all_combinations:
-        print(combo)
+# Compute P_D(k)
+conservative_votes = (np.sum(data, axis=1) + 9) // 2
+k_values, counts = np.unique(conservative_votes, return_counts=True)
+P_D = counts / len(data)
 
+# Compute P_I(k) (Binomial approximation)
+p_i = (np.mean(data, axis=0) + 1) / 2
+mean_p = np.mean(p_i)
+P_I = [binom.pmf(k, 9, mean_p) for k in range(10)]
 
-binomial(3, 2)
+# Plot
+plt.bar(k_values - 0.2, P_D, width=0.4, label="$P_D(k)$ (Data)")
+plt.bar(k_values + 0.2, P_I[: len(k_values)], width=0.4, label="$P_I(k)$ (Independent)")
+plt.xlabel("$k$ (Conservative votes)")
+plt.ylabel("Probability")
+plt.legend()
+plt.show()
